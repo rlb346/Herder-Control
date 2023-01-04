@@ -1,13 +1,13 @@
 import numpy as np
 
 ##Parameters
-folder = 'data2'
+folder = 'Data2'
 save = False #save the data files or not
 filename = 'PositionTarget'
 
 #simulation parameters
-n_times = 601      #number of simulation time steps
-t_end = 600        #end time in seconds
+n_times = 3001      #number of simulation time steps
+t_end = 3000        #end time in seconds
 length = 0.0002   #domain length in meters. 
 n_electrodes = 0   #number of electrodes
 boundary_scale = 3 #number of domain lengths extended for finite difference. 3 is one domain and another on each side
@@ -20,8 +20,12 @@ v0_stakeholder = 20*v0 #this is supposed to be the speed the stakeholder moves a
 xt = length/2                           #center of the circle
 yt = length/2
 rd = 3.0E-5                             #desired loiter distance, m
-initial_position = np.array([[xt+2.0*rd,yt+1.0*rd],[xt+rd,yt+2*rd],[xt-rd,yt-rd],[xt+rd,yt-2*rd]]) #initial positions of particles
-target_position = np.array([[0,0],[0.00012,0.00012],[0.0001,0.00015],[0.00005,0.0001]])
+# initial_position = np.array([[xt+2.0*rd,yt+1.0*rd],[xt+rd,yt+2*rd],[xt-rd,yt-rd],[xt+rd,yt-2*rd],[xt+rd,yt],[0,0],[0,0],[0,0],[0,0]]) #initial positions of particles
+initial_position = np.zeros((12,2))
+target_position = np.array([[0,0],[0.0001,0.0001],[0.0001,0.0001],[0.0001,0.0001],[0.0001,0.0001],[0.0001,0.0001],[0.0001,0.0001],[0.0001,0.0001],[0.0001,0.0001]])
+target_position = np.array([[0,0]])
+for i in range(len(initial_position)-1):
+    target_position = np.vstack((target_position,np.array([[0.0001,0.0001]])))
 n_stakeholders = 1                       #number of particles designated as stakeholders. Stakeholders are the first elements of initial_position.
 
 #physical parameters
@@ -29,6 +33,7 @@ mu = -2.0E-10/1000                    #diffusiophoretic mobility of particle m^2
 mu_e_stakeholder = 2*2.0E-8          #electrophoretic mobility of particles in Coulomb/Newton * m/s or m^2/V s
 epsilon = 78.4*8.8542E-12            #Dielectric constant of water in C^2/Nm^2 
 D = 2.30E-9                          #diffusion coefficient of solute. This number is the self-diffusion coeff of water at 25 C.
+D = 1.38E-9 #urea in water at 25C. 
 brownian_motion = 1                            #Brownian motion. Set to 1 for on or 0 for off
 T = 298                              #Temperature in K
 viscosity = 8.9E-4                   #viscosity of water
@@ -43,7 +48,7 @@ cutoff_percent = 0.2 #higher value will solve faster but be less accurate.
 feedback_gain = 0.1  #gain for target function
 k_close = 1.1
 upper_bound_factor = 50       #multiple of uemax to set upper bound at. 1 is normal for a single particle.
-strength = 1.0*2*particle_radius/length #I think this would be the strength needed for the stakeholder to drag the other particle
+strength = 0.5*2*particle_radius/length #I think this would be the strength needed for the stakeholder to drag the other particle
 
 #ub_e = upper_bound_factor*v0
 #bounds = ((-ub_e,ub_e))
@@ -51,7 +56,7 @@ bounds = ((0,length)) #move this to parameters file
 
 #guidance vector parameters
 little_r = 0 
-k_far = 3.0
+k_far = 2.5 #just changed this from 3.0. Does it affect things? #2.0 was too small. 
 big_R = k_far*(2*particle_radius)    
 G_path = 1
 H_path = 0
