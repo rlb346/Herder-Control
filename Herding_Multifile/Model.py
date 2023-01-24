@@ -48,8 +48,8 @@ ncutoffsteps = int(tcutoff/delta_t) #number of timesteps before cutoff. Note tha
 def chemical_velocity(xy,t,stakepos,u,decision_times, mu, D,stakehistory): 
     x = xy[0]
     y = xy[1]
-    vx = 0
-    vy = 0
+    vx = 0.0
+    vy = 0.0
     for i in range(len(stakehistory)+1): 
         for j in range(n_stakeholders):
             if i == len(stakehistory):#Don't actually need this because decision_times>t here. #It actually does get used, what did I mean by that?

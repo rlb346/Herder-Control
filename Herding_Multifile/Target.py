@@ -7,14 +7,12 @@ import Parameters as P
 target_type = P.target_type
 length = P.length
 n_particles = P.n_particles
-xt = P.xt
-yt = P.yt
-v0 = P.v0
-rd = P.rd
 feedback_gain = P.feedback_gain
 
 ##target
 if target_type == 'circle':
+    v0 = P.v0
+    rd = P.rd
     xt = length/2         #center of the circle
     yt = length/2
     @njit #desired trajectory
@@ -42,6 +40,8 @@ if target_type == 'circle':
         dy[1] =v0*np.cos(v0*t/rd) -k*(y[1]-yought[1])
         return np.vstack((dx,dy))
 elif target_type == 'figure8':
+    v0 = P.v0
+    rd = P.rd
     xt = length/2         #center of the figure-eight
     yt = length/2
     @njit #desired trajectory
@@ -76,17 +76,19 @@ elif target_type == 'position':
     def target_trajectory(t): #check if this is right dimensions
         return target_position
     
-    @njit
-    def target_velocity(xs,t,chase_index): 
-        #k = feedback_gain
-        x = xs[0]
-        y = xs[1]    
-        dx = np.zeros(n_particles)
-        dy = np.zeros(n_particles)
-        distance = np.sqrt((x[chase_index]-target_position[chase_index,0])**2 + (y[chase_index]-target_position[chase_index,1])**2)
-        dx[chase_index] = v0*(target_position[chase_index,0]-x[chase_index])/distance
-        dy[chase_index] = v0*(target_position[chase_index,1]-y[chase_index])/distance
-        #the rest are zero
-        return np.vstack((dx,dy))
+# =============================================================================
+#     @njit
+#     def target_velocity(xs,t,chase_index): 
+#         #k = feedback_gain
+#         x = xs[0]
+#         y = xs[1]    
+#         dx = np.zeros(n_particles)
+#         dy = np.zeros(n_particles)
+#         distance = np.sqrt((x[chase_index]-target_position[chase_index,0])**2 + (y[chase_index]-target_position[chase_index,1])**2)
+#         dx[chase_index] = v0*(target_position[chase_index,0]-x[chase_index])/distance
+#         dy[chase_index] = v0*(target_position[chase_index,1]-y[chase_index])/distance
+#         #the rest are zero
+#         return np.vstack((dx,dy))
+# =============================================================================
 else:
     raise Exception("target_type must be 'circle' or 'figure8'.")

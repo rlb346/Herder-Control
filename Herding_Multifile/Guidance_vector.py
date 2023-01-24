@@ -14,7 +14,7 @@ H_obstacle = P.H_obstacle
 #This function gives a guidance vector field to move the stakeholder to the target while avoiding the obstacles.
 #The paper it is based on moves the vehicle to the origin, so you must shift the coordinates so the target is the origin.
 #@njit
-def guidance_vector(position,target,obstacle): #the position of the stakeholder and the point it is trying to reach and the location of the obstacle
+def guidance_vector(position,target,obstacle,chase_index): #the position of the stakeholder and the point it is trying to reach and the location of the obstacle
     x = position[0]/length-target[0]/length #shift coordinate frame so target is the origin, and scale by length
     y = position[1]/length-target[1]/length
     xc = np.zeros(len(obstacle[0]))
@@ -37,9 +37,10 @@ def guidance_vector(position,target,obstacle): #the position of the stakeholder 
     V_path = G_path*V_conv + H_path*V_circ
     Vg = V_path
     for i in range(len(obstacle[0])):
-        Vo_conv = -1/np.sqrt(xbar[i]**4+ybar[i]**4+2*xbar[i]**2*ybar[i]**2-2*little_r**2*xbar[i]**2-2*little_r**2*ybar[i]**2+little_r**2)*np.array([2*xbar[i]**3+2*xbar[i]*ybar[i]**2-2*little_r**2*xbar[i],2*ybar[i]**3+2*xbar[i]**2*ybar[i]-2*little_r**2*ybar[i]])
-        Vo_circ = np.array([2*(y-yc[i]),2*(xc[i]-x)])
-        V_obstacle = G_obstacle*Vo_conv+H_obstacle*Vo_circ
-        Vg += P[i]*V_obstacle
+        if i == chase_index: #check if this works. If it does, rewrite without loop.
+            Vo_conv = -1/np.sqrt(xbar[i]**4+ybar[i]**4+2*xbar[i]**2*ybar[i]**2-2*little_r**2*xbar[i]**2-2*little_r**2*ybar[i]**2+little_r**2)*np.array([2*xbar[i]**3+2*xbar[i]*ybar[i]**2-2*little_r**2*xbar[i],2*ybar[i]**3+2*xbar[i]**2*ybar[i]-2*little_r**2*ybar[i]])
+            Vo_circ = np.array([2*(y-yc[i]),2*(xc[i]-x)])
+            V_obstacle = G_obstacle*Vo_conv+H_obstacle*Vo_circ
+            Vg += P[i]*V_obstacle
     velocity = Vg
     return velocity/np.linalg.norm(velocity)*v0_stakeholder #try normalizing it, see if it works.    

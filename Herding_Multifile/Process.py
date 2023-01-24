@@ -1,6 +1,7 @@
 import numpy as np
 from numba import njit
 from scipy.interpolate import RectBivariateSpline
+import random
 
 import Parameters as P
 import Guidance_vector as G
@@ -38,7 +39,8 @@ t_end = nTauRun*diffusive_timescale              # Change the end time so it is 
 #will this cause problems with the controller times not lining up? Might have to change this.
 nt   = int(np.ceil(t_end/dt)) +1 # number of timesteps
 tlarge = np.linspace(0,t_end,nt)
-
+particle_list = list(range(n_particles))
+particle_list2 = list(range(n_particles))
 
 
 
@@ -74,7 +76,7 @@ def process(uchem,stake_target,grid,time, initialpos,chase_index):
         for m in range(n_particles):
             if m < n_stakeholders: #chase_index might mess it up when chase_index == 0
                 #v_desired = guidance_vector(xy[k,:,0],stake_target, xy[k,:,chase_index]) #this is for chased particle, then will need to do for others. 
-                v_desired = G.guidance_vector(xy[k,:,0],stake_target, xy[k,:,n_stakeholders:])
+                v_desired = G.guidance_vector(xy[k,:,0],stake_target, xy[k,:,n_stakeholders:],chase_index)
                 vxy[k,0,m] = v_desired[0] + brownian_motion*np.random.normal(0,1)*np.sqrt(2*Dp)/np.sqrt(dt)
                 vxy[k,1,m] = v_desired[1] + brownian_motion*np.random.normal(0,1)*np.sqrt(2*Dp)/np.sqrt(dt)     
             else:
@@ -86,8 +88,10 @@ def process(uchem,stake_target,grid,time, initialpos,chase_index):
         # #hard sphere interactions.
             xcheck = xy[k,0,:] #notice this is not making a copy, it is just attaching a name to this section of the data.
             ycheck = xy[k,1,:]
-            for ii in range(n_stakeholders,n_particles):
-                for jj in range(n_particles):
+            random.shuffle(particle_list)
+            random.shuffle(particle_list2)
+            for ii in particle_list:
+                for jj in particle_list2:
                     if ii != jj:
                         dij = np.sqrt((xcheck[ii]-xcheck[jj])**2+(ycheck[ii]-ycheck[jj])**2)           
                         if dij < 2*radius:
