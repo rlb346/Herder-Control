@@ -21,8 +21,6 @@ W_3 = P.W_3
 #FIXME get this njit to work 
 #@njit #cost function 
 def objective(u,decision_times, previousu,xypos,start, stakehistory,chase_index): 
-    tooclose = np.zeros(n_vision+1)
-    #dstake = np.reshape(u,(n_vision+1,2))
     xstake = np.reshape(u,(n_vision+1,2))
     uchem = np.ones((n_stakeholders,n_vision+1))*umax #in the future this might be calculated, but for now it's static.
     temp = np.hstack((previousu[0,:],uchem[0,:]))
@@ -33,13 +31,9 @@ def objective(u,decision_times, previousu,xypos,start, stakehistory,chase_index)
         uchemcombined = np.vstack((uchemcombined,temp1)) 
     vxy,xys = M.model(uchemcombined,xstake,decision_times,xypos,start, start+n_vision, mu, D, stakehistory)  
     
-    #target = np.zeros((n_vision+1,2,n_particles))
-    for k in range(1,n_vision+1): #initial point plus n_vision into future
-        #maybe get rid of initial point?
-        #target[k] = T.target_velocity(xys[k],t[start+k],chase_index) 
-        for j in range(n_stakeholders,n_particles): #skip over the stakeholders
-            if j == chase_index: #testing this line, if it works then adjust code
-                rij = np.sqrt((xys[k,0,0] - xys[k,0,j])**2 + (xys[k,1,0] - xys[k,1,j])**2)
-                tooclose[k] += max(0,(k_close*2*radius-rij)) #the += might mess things up?
+    tooclose = np.zeros(n_vision+1) #tooclose[0] is 0, could change that.
+    for k in range(1,n_vision+1): #n_vision into future, does not include initial point.
+        rij = np.sqrt((xys[k,0,0] - xys[k,0,chase_index])**2 + (xys[k,1,0] - xys[k,1,chase_index])**2)
+        tooclose[k] = max(0,(k_close*2*radius-rij)) 
     residual = xys[:,:,chase_index]-T.target_position[chase_index,:]  #do first and second actually matter?
     return np.concatenate((W_1*residual.flatten()/length,W_3*tooclose.flatten()/radius)) 

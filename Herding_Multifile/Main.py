@@ -50,17 +50,22 @@ i = 0
 while True: #does python have do while loops? Or move the += to end of this block.
     #switching rule
     distance = np.sqrt((xy[i,0,:]-target_position[:,0])**2 + (xy[i,1,:]-target_position[:,1])**2)
-    if (distance[n_stakeholders:] > 2*radius).any(): #changed this to 2, is it still good? 
+    if (distance[n_stakeholders:] > 2*radius).any(): #2 should be a parameter 
         if switch_targets:
             chase_index = np.argmax(distance[n_stakeholders:])+n_stakeholders
             switch_targets = False
-            #heuristic for choosing guess value
-            right = np.sign(xy[i,0,chase_index]-target_position[chase_index,0]) #particle is to the right of target if this is positive
-            above = np.sign(xy[i,1,chase_index]-target_position[chase_index,1]) #particle is above target if this is positive
-            uguess[::2] = xy[i,0,chase_index]+right*4*radius*np.sign(-mu)
-            uguess[1::2]=xy[i,1,chase_index]+above*4*radius*np.sign(-mu)
         elif distance[chase_index] < radius:
-            switch_targets = True      
+            switch_targets = True     
+            #should I have a continue statement here or something?
+            
+        #heuristic for choosing guess value
+        right = xy[i,0,chase_index]-target_position[chase_index,0] #particle is to the right of target if this is positive
+        above = xy[i,1,chase_index]-target_position[chase_index,1] #particle is above target if this is positive
+        dist = np.sqrt(right**2 + above**2)
+        #uguess[::2] = xy[i,0,chase_index]+np.sign(right)*8*radius*np.sign(-mu)
+        #uguess[1::2]=xy[i,1,chase_index]+np.sign(above)*8*radius*np.sign(-mu)
+        uguess[::2] = xy[i,0,chase_index]-right/dist*8*radius*np.sign(mu)
+        uguess[1::2]= xy[i,1,chase_index]-above/dist*8*radius*np.sign(mu)
     else:
         chase_index = 0
         if distance[0] < radius:
@@ -87,3 +92,8 @@ while True: #does python have do while loops? Or move the += to end of this bloc
     #print(result.fun[-(n_vision+1):])
     #print(uresult[:2])
     i += 1
+
+
+#%%
+    print(np.sqrt((right/dist*8*radius*np.sign(mu))**2 + (right/dist*8*radius*np.sign(mu))**2))
+    print(radius)

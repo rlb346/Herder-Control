@@ -40,7 +40,6 @@ t_end = nTauRun*diffusive_timescale              # Change the end time so it is 
 nt   = int(np.ceil(t_end/dt)) +1 # number of timesteps
 tlarge = np.linspace(0,t_end,nt)
 particle_list = list(range(n_particles))
-particle_list2 = list(range(n_particles))
 
 
 
@@ -82,19 +81,18 @@ def process(uchem,stake_target,grid,time, initialpos,chase_index):
             else:
                 vxy[k,0,m] = mu*(interp(xy[k-1,0,m]+deltaxy,xy[k-1,1,m]) - interp(xy[k-1,0,m]-deltaxy,xy[k-1,1,m]))/(2*deltaxy) + brownian_motion*np.random.normal(0,1)*np.sqrt(2*Dp)/np.sqrt(dt)
                 vxy[k,1,m] = mu*(interp(xy[k-1,0,m],xy[k-1,1,m]+deltaxy) - interp(xy[k-1,0,m],xy[k-1,1,m]-deltaxy))/(2*deltaxy) + brownian_motion*np.random.normal(0,1)*np.sqrt(2*Dp)/np.sqrt(dt)
-            #xy[k+1,:,n_stakeholders:] = xy[k,:,n_stakeholders:] + vxy[k,:,n_stakeholders:]*dt 
-            xy[k+1,:,:] = xy[k,:,:] + vxy[k,:,:]*dt
+            xy[k+1,:,m] = xy[k,:,m] + vxy[k,:,m]*dt
+            #now it just moves particle m, and that seems to work. Fix the hard spheres to do the same.
+            #now I'm getting the solver not working sometimes. Why?
             
-        # #hard sphere interactions.
-            xcheck = xy[k,0,:] #notice this is not making a copy, it is just attaching a name to this section of the data.
-            ycheck = xy[k,1,:]
+            #hard sphere interactions.
+            xcheck = xy[k+1,0,:] #notice this is not making a copy, it is just attaching a name to this section of the data.
+            ycheck = xy[k+1,1,:]
             random.shuffle(particle_list)
-            random.shuffle(particle_list2)
             for ii in particle_list:
-                for jj in particle_list2:
-                    if ii != jj:
-                        dij = np.sqrt((xcheck[ii]-xcheck[jj])**2+(ycheck[ii]-ycheck[jj])**2)           
-                        if dij < 2*radius:
-                            xcheck[ii] = xcheck[ii] - 1*(dij-2*radius)*(xcheck[ii]-xcheck[jj])/dij
-                            ycheck[ii] = ycheck[ii] - 1*(dij-2*radius)*(ycheck[ii]-ycheck[jj])/dij
+                if ii != m:
+                    dij = np.sqrt((xcheck[ii]-xcheck[m])**2+(ycheck[ii]-ycheck[m])**2)           
+                    if dij < 2*radius:
+                        xcheck[m] = xcheck[m] - 1*(dij-2*radius)*(xcheck[m]-xcheck[ii])/dij
+                        ycheck[m] = ycheck[m] - 1*(dij-2*radius)*(ycheck[m]-ycheck[ii])/dij
     return (xy[-1])
