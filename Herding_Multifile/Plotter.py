@@ -47,16 +47,18 @@ def plotter(k,xanswer,yanswer,uresult):
     plt.plot(uresult[0]*cm,uresult[1]*cm,'s',color = 'm', ms = 2)
     if target_type == 'position':
         for c in range(n_particles):
-            if c < n_stakeholders:
-                order = 3
-            else:
-                order = 2
+# =============================================================================
+#             if c < n_stakeholders:
+#                 order = 3
+#             else:
+#                 order = 2
+# =============================================================================
             plt.plot(target_position[c,0]*cm,target_position[c,1]*cm,'x',color = colors[c]) #double check this
-            plt.plot(xanswer[k,c]*cm,yanswer[k,c]*cm, "o", color = colors[c], markersize = marksize, zorder = order)
+            plt.plot(xanswer[k,c]*cm,yanswer[k,c]*cm, "o", color = colors[c], markersize = marksize)
             if k< ntail:
-                plt.plot(xanswer[:k+1,c]*cm,yanswer[:k+1,c]*cm,color = colors[c], linewidth = 1.5,zorder = order)
+                plt.plot(xanswer[:k+1,c]*cm,yanswer[:k+1,c]*cm,color = colors[c], linewidth = 1.5)
             else:
-                plt.plot(xanswer[k-ntail:k+1,c]*cm,yanswer[k-ntail:k+1,c]*cm,color = colors[c], linewidth = 1.5,zorder = order)
+                plt.plot(xanswer[k-ntail:k+1,c]*cm,yanswer[k-ntail:k+1,c]*cm,color = colors[c], linewidth = 1.5)
         #plt.plot(target_position[:,0]*cm,target_position[:,1]*cm,'x',color = 'r') #double check this
     
     #plot passive particles    
