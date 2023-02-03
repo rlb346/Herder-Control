@@ -18,8 +18,10 @@ n_stakeholders = P.n_stakeholders
 n_particles = P.n_particles
 brownian_motion = P.brownian_motion
 Dp = P.Dp
+Dp_h = P.Dp_herder
 mu = P.mu
 radius = P.particle_radius
+radius_h = P.herder_radius
 
 
 #some preliminary stuff
@@ -72,27 +74,32 @@ def process(uchem,stake_target,grid,time, initialpos,chase_index):
             Sources[xindex[n],yindex[n]] = uchem[n] 
         finite_difference(grid,Sources)
         interp = RectBivariateSpline(x,y,grid) #default for RectBivariateSpline is cubic interpolation
-        for m in range(n_particles):
+        for m in range(n_particles): #does this cause errors by moving them in order?
             if m < n_stakeholders: #chase_index might mess it up when chase_index == 0
-                #v_desired = guidance_vector(xy[k,:,0],stake_target, xy[k,:,chase_index]) #this is for chased particle, then will need to do for others. 
-                v_desired = G.guidance_vector(xy[k,:,0],stake_target, xy[k,:,n_stakeholders:],chase_index)
+                v_desired = G.guidance_vector(xy[k,:,m],stake_target, xy[k,:,n_stakeholders:],chase_index)
                 vxy[k,0,m] = v_desired[0] + brownian_motion*np.random.normal(0,1)*np.sqrt(2*Dp)/np.sqrt(dt)
                 vxy[k,1,m] = v_desired[1] + brownian_motion*np.random.normal(0,1)*np.sqrt(2*Dp)/np.sqrt(dt)     
             else:
-                vxy[k,0,m] = mu*(interp(xy[k-1,0,m]+deltaxy,xy[k-1,1,m]) - interp(xy[k-1,0,m]-deltaxy,xy[k-1,1,m]))/(2*deltaxy) + brownian_motion*np.random.normal(0,1)*np.sqrt(2*Dp)/np.sqrt(dt)
-                vxy[k,1,m] = mu*(interp(xy[k-1,0,m],xy[k-1,1,m]+deltaxy) - interp(xy[k-1,0,m],xy[k-1,1,m]-deltaxy))/(2*deltaxy) + brownian_motion*np.random.normal(0,1)*np.sqrt(2*Dp)/np.sqrt(dt)
+                vxy[k,0,m] = mu*(interp(xy[k-1,0,m]+deltaxy,xy[k-1,1,m]) - interp(xy[k-1,0,m]-deltaxy,xy[k-1,1,m]))/(2*deltaxy) + brownian_motion*np.random.normal(0,1)*np.sqrt(2*Dp_h)/np.sqrt(dt)
+                vxy[k,1,m] = mu*(interp(xy[k-1,0,m],xy[k-1,1,m]+deltaxy) - interp(xy[k-1,0,m],xy[k-1,1,m]-deltaxy))/(2*deltaxy) + brownian_motion*np.random.normal(0,1)*np.sqrt(2*Dp_h)/np.sqrt(dt)
             xy[k+1,:,m] = xy[k,:,m] + vxy[k,:,m]*dt
-            #now it just moves particle m, and that seems to work. Fix the hard spheres to do the same.
-            #now I'm getting the solver not working sometimes. Why?
             
             #hard sphere interactions.
             xcheck = xy[k+1,0,:] #notice this is not making a copy, it is just attaching a name to this section of the data.
             ycheck = xy[k+1,1,:]
-            random.shuffle(particle_list)
+            #random.shuffle(particle_list) #hard to shuffle with different radius.
+            #implement this as seperate numba function.
             for ii in particle_list:
                 if ii != m:
-                    dij = np.sqrt((xcheck[ii]-xcheck[m])**2+(ycheck[ii]-ycheck[m])**2)           
-                    if dij < 2*radius:
-                        xcheck[m] = xcheck[m] - 1*(dij-2*radius)*(xcheck[m]-xcheck[ii])/dij
-                        ycheck[m] = ycheck[m] - 1*(dij-2*radius)*(ycheck[m]-ycheck[ii])/dij
+                    dij = np.sqrt((xcheck[ii]-xcheck[m])**2+(ycheck[ii]-ycheck[m])**2) 
+                    if ii < n_stakeholders:
+                        overlap_distance = radius+radius_h
+                    else:
+                        overlap_distance = 2*radius
+                    if dij < overlap_distance:
+                        xcheck[m] = xcheck[m] - 1*(dij-overlap_distance)*(xcheck[m]-xcheck[ii])/dij
+                        ycheck[m] = ycheck[m] - 1*(dij-overlap_distance)*(ycheck[m]-ycheck[ii])/dij
     return (xy[-1])
+
+#%%
+    print(np.max(grid[50]))

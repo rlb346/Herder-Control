@@ -7,7 +7,7 @@ import Parameters as P
 target_type = P.target_type
 length = P.length
 n_particles = P.n_particles
-feedback_gain = P.feedback_gain
+#feedback_gain = P.feedback_gain
 
 ##target
 if target_type == 'circle':
@@ -27,7 +27,7 @@ if target_type == 'circle':
 
     @njit #velocity target (derivative of desired trajectory with a feedback correction)
     def target_velocity(xs,t,xyought):
-        k = feedback_gain
+        #k = feedback_gain
         x = xs[0]
         y = xs[1]
         xought = xyought[0]

@@ -9,7 +9,7 @@ length = P.length
 D = P.D
 delta_t = P.delta_t
 n_stakeholders = P.n_stakeholders
-radius = P.particle_radius
+radius_h = P.herder_radius
 n_particles = P.n_particles
 t = P.t
 
@@ -54,7 +54,7 @@ def chemical_velocity(xy,t,stakepos,u,decision_times, mu, D,stakehistory):
         for j in range(n_stakeholders):
             if i == len(stakehistory):#Don't actually need this because decision_times>t here. #It actually does get used, what did I mean by that?
                 rad = np.sqrt((stakepos[0,j]-x)**2 + (stakepos[1,j]-y)**2)
-                if rad < radius:
+                if rad < radius_h:
                     continue
                 vx += f(t,decision_times[i],rad,u[j,i],mu,D)*(x-stakepos[0,j])
                 vx -= f(t,decision_times[i] + delta_t,rad,u[j,i],mu,D)*(x-stakepos[0,j])
@@ -62,7 +62,7 @@ def chemical_velocity(xy,t,stakepos,u,decision_times, mu, D,stakehistory):
                 vy -= f(t,decision_times[i] + delta_t,rad,u[j,i],mu,D)*(y-stakepos[1,j])
             else:  
                 rad = np.sqrt((stakehistory[i,0,j]-x)**2 +(stakehistory[i,1,j]-y)**2)
-                if rad < radius:
+                if rad < radius_h:
                     continue
                 vx += f(t,decision_times[i],rad,u[j,i],mu,D)*(x-stakehistory[i,0,j])
                 vx -= f(t,decision_times[i] + delta_t,rad,u[j,i],mu,D)*(x-stakehistory[i,0,j])

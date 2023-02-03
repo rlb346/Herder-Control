@@ -5,6 +5,8 @@ import Parameters as P
 length = P.length
 v0_stakeholder = P.v0_stakeholder
 radius = P.particle_radius
+radius_h = P.herder_radius
+k_close = P.k_close
 
 little_r = P.little_r 
 big_R = P.big_R    
@@ -40,10 +42,10 @@ def guidance_vector(position,target,obstacle,chase_index): #the position of the 
     for i in range(len(obstacle[0])):
         #if i == chase_index: #check if this works. If it does, rewrite without loop.
         cdist = np.sqrt(xc[i]**2 + yc[i]**2)
-        if cdist > 2*radius/length or i == chase_index:
+        if cdist > (k_close*(radius+radius_h))/length or i == chase_index:
             Vo_conv = -1/np.sqrt(xbar[i]**4+ybar[i]**4+2*xbar[i]**2*ybar[i]**2-2*little_r**2*xbar[i]**2-2*little_r**2*ybar[i]**2+little_r**2)*np.array([2*xbar[i]**3+2*xbar[i]*ybar[i]**2-2*little_r**2*xbar[i],2*ybar[i]**3+2*xbar[i]**2*ybar[i]-2*little_r**2*ybar[i]])
             Vo_circ = np.array([2*(y-yc[i]),2*(xc[i]-x)])
             V_obstacle = G_obstacle*Vo_conv+H_obstacle*Vo_circ
             Vg += P[i]*V_obstacle
     velocity = Vg
-    return velocity/np.linalg.norm(velocity)*v0_stakeholder #try normalizing it, see if it works.    
+    return velocity/np.linalg.norm(velocity)*v0_stakeholder    
