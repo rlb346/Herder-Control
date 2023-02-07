@@ -35,6 +35,6 @@ def objective(u,decision_times, previousu,xypos,start, stakehistory,chase_index)
     tooclose = np.zeros(n_vision+1) #tooclose[0] is 0, could change that.
     for k in range(1,n_vision+1): #n_vision into future, does not include initial point.
         rij = np.sqrt((xys[k,0,0] - xys[k,0,chase_index])**2 + (xys[k,1,0] - xys[k,1,chase_index])**2)
-        tooclose[k] = max(0,(k_close*(radius+radius_h)-rij)) 
+        tooclose[k] = max(0,(k_close*radius+radius_h-rij)) 
     residual = xys[:,:,chase_index]-T.target_position[chase_index,:]  #do first and second actually matter?
     return np.concatenate((W_1*residual.flatten()/length,W_3*tooclose.flatten()/radius)) 

@@ -27,6 +27,7 @@ decision_times = P.decision_times
 umax = P.umax
 dtratio = P.dtratio
 save = P.save
+d_precision = P.d_precision
 
 tlarge = Pro.tlarge
 ncutoffsteps = M.ncutoffsteps
@@ -52,13 +53,12 @@ i = 0
 while True: #does python have do while loops? Or move the += to end of this block.
     #switching rule
     distance = np.sqrt((xy[i,0,:]-target_position[:,0])**2 + (xy[i,1,:]-target_position[:,1])**2)
-    if (distance[n_stakeholders:] > 2*radius).any(): #2 should be a parameter 
+    if (distance[n_stakeholders:] > d_precision).any(): #
+        if distance[chase_index] < radius:
+            switch_targets = True 
         if switch_targets:
             chase_index = np.argmax(distance[n_stakeholders:])+n_stakeholders
-            switch_targets = False
-        elif distance[chase_index] < radius:
-            switch_targets = True     
-            #should I have a continue statement here or something?
+            switch_targets = False   
     else:
         chase_index = 0
     #heuristic for choosing guess value.

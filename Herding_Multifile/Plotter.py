@@ -38,7 +38,7 @@ marksize_h = 0.75*0.775*2*radius_h*234/(higher-lower)
 
 #plotting function
 plt.rc("font",size = 10)
-colors = ['tab:orange','tab:red','tab:green','tab:olive','tab:brown','tab:cyan','tab:purple'] 
+colors = ['tab:orange','tab:red','tab:green','tab:olive','tab:brown','tab:cyan','tab:purple','tab:pink','tab:gray','springgreen'] 
 
 def plotter(k,xanswer,yanswer,uresult):
     plt.figure(figsize=(3.25, 3.25), dpi= 200, facecolor='w', edgecolor='k')
@@ -54,9 +54,9 @@ def plotter(k,xanswer,yanswer,uresult):
 # =============================================================================
             plt.plot(target_position[c,0]*cm,target_position[c,1]*cm,'x',color = colors[c]) 
             if c < n_stakeholders:
-                plt.plot(xanswer[k,c]*cm,yanswer[k,c]*cm, "o", color = colors[c], markersize = marksize_h,zorder = 3)
+                plt.plot(xanswer[k,c]*cm,yanswer[k,c]*cm, "o", color = colors[c], markersize = marksize_h,zorder = 4)
             else:
-                plt.plot(xanswer[k,c]*cm,yanswer[k,c]*cm, "o", color = colors[c], markersize = marksize,zorder = 3)
+                plt.plot(xanswer[k,c]*cm,yanswer[k,c]*cm, "o", color = colors[c], markersize = marksize,zorder = 4)
             
             if k< ntail:
                 plt.plot(xanswer[:k+1,c]*cm,yanswer[:k+1,c]*cm,color = colors[c], linewidth = 1.5,zorder = 3)

@@ -24,18 +24,24 @@ dt = 0.0008       #Timestep for the finite difference simulations.
 #Note that the default initial position for circle is right side, while default for figure8 is center.
 #A 'position' target is the only type that can handle more than one passive particle. 
 target_type = 'position' 
-v0_stakeholder = 5*1E-6 #The speed the stakeholder moves at. #was previously 20
+v0_stakeholder = 4*5*1E-6 #The speed the stakeholder moves at. #was previously 20
 xt = length/2                           #center of the circle
 yt = length/2
 
-initial_position = np.zeros((7,2))  #The initial positions of particles (both passive and stakeholders).
+#was 7
+initial_position = np.zeros((10,2))  #The initial positions of particles (both passive and stakeholders).
 for i in range(len(initial_position)):
     initial_position[i] = length/4+np.random.rand(2)*length/2 #for testing
 #The first n_stakeholders entries are the initial positions of the stakeholders.
 n_particles = len(initial_position)   #The number of particles (both passive and stakeholders).
 
+center = length/2
+ell_target = 0.00004
+target_hi = center+ell_target
+target_lo = center-ell_target
 #target_position_unsorted = np.array([[0,0],[0.0001,0.00012],[0.00012,0.00012],[0.0001,0.00008],[0.00012,0.00008],[0.00008,0.00012],[0.00008,0.00008]])
-target_position_unsorted = np.array([[0,0],[0.0001,0.00013],[0.00013,0.00013],[0.0001,0.00007],[0.00013,0.00007],[0.00007,0.00013],[0.00007,0.00007]])
+#target_position_unsorted = np.array([[0,0],[0.0001,0.00014],[0.00014,0.00014],[0.0001,0.00006],[0.00014,0.00006],[0.00006,0.00014],[0.00006,0.00006]])
+target_position_unsorted = np.array([[0,0],[center,target_hi],[target_hi,target_hi],[center,target_lo],[target_hi,target_lo],[target_lo,target_hi],[target_lo,target_lo],[target_lo,center],[center,center],[target_hi,center]])
 n_stakeholders = 1  #change this to n_herders. They're not stakeholders any more.
 
 #Assign target positions to particles.
@@ -53,11 +59,11 @@ mu = 2.0E-10/1000                    #diffusiophoretic mobility of particle m^2/
 mu_e_stakeholder = 2*2.0E-8          #electrophoretic mobility of particles in Coulomb/Newton * m/s or m^2/V s
 epsilon = 78.4*8.8542E-12            #Dielectric constant of water in C^2/Nm^2 
 D = 2.01E-9 #Diffusion coefficient of solute. This number is for oxygen in water. 
-brownian_motion = 0                            #Brownian motion. Set to 1 for on or 0 for off
+brownian_motion = 1                            #Brownian motion. Set to 1 for on or 0 for off
 T = 298                              #Temperature in K
 viscosity = 8.9E-4                   #viscosity of water
 particle_radius = 3E-6                        #m, radius of colloidal particle
-herder_radius = 2.0*particle_radius 
+herder_radius = 1.0*particle_radius 
 k_boltzmann = 1.38064852E-23 #Boltzmann's constant.
 Dp = k_boltzmann*T/(viscosity*6*np.pi*particle_radius) #The diffusion coefficient of the colloidal particles.
 Dp_herder = k_boltzmann*T/(viscosity*6*np.pi*herder_radius) #not yet implemented
@@ -68,21 +74,20 @@ W_1 = 20             #weight for residuals in objective function. This is actual
 W_2 = 1
 W_3 = 1000
 cutoff_percent = 0.2 #higher value will solve faster but be less accurate.
-#feedback_gain = 0.1  #gain for target function
 k_close = 1.1
 
 bounds = ((0,length)) #move this to parameters file
 
 #guidance vector parameters
 little_r = 0 
-k_far = 2.0#2.5 #just changed this from 3.0. Does it affect things? #2.0 was too small. 
+k_far = 1.6#2.5 #just changed this from 3.0. Does it affect things? #2.0 was too small. 
 big_R = k_far*(particle_radius + herder_radius)    
 G_path = 1
 H_path = 0
-G_obstacle = -10
-H_obstacle = 1    
+G_obstacle = -2
+H_obstacle = 0.5    
 
-
+d_precision = 2*particle_radius
 
 
 #some more setup stuff
@@ -91,7 +96,7 @@ decision_times = t.copy() + 1e-7    #array for decision times. 1e-7 lets us avoi
 
 reaction_rate = 0.01 #mol/s/m^2, typical of platinum in H2O2.
 umax = reaction_rate*2*np.pi*herder_radius
-#umax = 4e-7
+umax = 4e-7
 
 
 simulation_length = boundary_scale*length  # Length of simulation domain.
