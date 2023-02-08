@@ -31,7 +31,7 @@ Ehigh = 0.03
 margin = length/10
 lower = 0-margin
 higher = length+margin
-ntail = 30
+ntail = 30*10
 marksize = 0.75*0.775*2*radius*234/(higher-lower)#72 points per inch times 3.25 inches across=234. 0.775 is to account for axis label 
 #the 0.75 is a fudge factor to make it look right. I can't figure out why, but without it the plot is wrong. 
 marksize_h = 0.75*0.775*2*radius_h*234/(higher-lower)

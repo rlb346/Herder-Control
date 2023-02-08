@@ -4,13 +4,13 @@ from scipy.interpolate import RectBivariateSpline
 import random
 
 import Parameters as P
-import Guidance_vector as G
+
 
 nxy = P.nxy
 boundary_scale = P.boundary_scale
 length = P.length
-t_end = P.t_end
-diffusive_timescale = P.diffusive_timescale
+#t_end = P.t_end
+#diffusive_timescale = P.diffusive_timescale
 dt = P.dt
 D = P.D
 deltaxy = P.deltaxy
@@ -22,6 +22,8 @@ Dp_h = P.Dp_herder
 mu = P.mu
 radius = P.particle_radius
 radius_h = P.herder_radius
+dtratio = P.dtratio
+delta_t = P.delta_t
 
 
 #some preliminary stuff
@@ -36,11 +38,13 @@ x = np.linspace(-interval*length,(1+interval)*length,nxy)
 y = np.linspace(-interval*length,(1+interval)*length,nxy)
 X,Y = np.meshgrid(x,y) 
 
-nTauRun = t_end/diffusive_timescale              # number of intrinsic timescale to run for
-t_end = nTauRun*diffusive_timescale              # Change the end time so it is a multiple of the diffusive timescale.
+#nTauRun = t_end/diffusive_timescale              # number of intrinsic timescale to run for
+#t_end = nTauRun*diffusive_timescale              # Change the end time so it is a multiple of the diffusive timescale.
 #will this cause problems with the controller times not lining up? Might have to change this.
-nt   = int(np.ceil(t_end/dt)) +1 # number of timesteps
-tlarge = np.linspace(0,t_end,nt)
+#nt   = int(np.ceil(t_end/dt)) +1 # number of timesteps
+#tlarge = np.linspace(0,t_end,nt)
+
+tsmall = np.linspace(0,delta_t,dtratio)
 particle_list = list(range(n_particles))
 
 
@@ -60,7 +64,7 @@ xindex = np.zeros(n_stakeholders, dtype = int)
 yindex = np.zeros(n_stakeholders, dtype = int)
 
 #this function runs the physics and gives the resulting positions
-def process(uchem,stake_target,grid,time, initialpos,chase_index): 
+def process(uchem,stake_velocity,grid,time, initialpos): 
     xy = np.zeros((len(time),2,n_particles))
     xy[0] = initialpos
     vxy = np.zeros((len(time),2,n_particles))
@@ -71,12 +75,12 @@ def process(uchem,stake_target,grid,time, initialpos,chase_index):
             #Find the new location for the stakeholder source term.
             xindex[n] = np.argmin((X[0,:]-xy[k,0,n])**2)
             yindex[n] = np.argmin((Y[:,0]-xy[k,1,n])**2)
-            Sources[xindex[n],yindex[n]] = uchem[n] 
+            Sources[xindex[n],yindex[n]] = uchem#[n] 
         finite_difference(grid,Sources)
         interp = RectBivariateSpline(x,y,grid) #default for RectBivariateSpline is cubic interpolation
         for m in range(n_particles): #does this cause errors by moving them in order?
-            if m < n_stakeholders: #chase_index might mess it up when chase_index == 0
-                v_desired = G.guidance_vector(xy[k,:,m],stake_target, xy[k,:,n_stakeholders:],chase_index)
+            if m < n_stakeholders: 
+                v_desired = stake_velocity
                 vxy[k,0,m] = v_desired[0] + brownian_motion*np.random.normal(0,1)*np.sqrt(2*Dp)/np.sqrt(dt)
                 vxy[k,1,m] = v_desired[1] + brownian_motion*np.random.normal(0,1)*np.sqrt(2*Dp)/np.sqrt(dt)     
             else:
@@ -101,5 +105,3 @@ def process(uchem,stake_target,grid,time, initialpos,chase_index):
                         ycheck[m] = ycheck[m] - 1*(dij-overlap_distance)*(ycheck[m]-ycheck[ii])/dij
     return (xy[-1])
 
-#%%
-    print(np.max(grid[50]))

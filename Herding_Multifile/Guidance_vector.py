@@ -2,11 +2,12 @@ import numpy as np
 
 import Parameters as P
 
+delta_t = P.delta_t
 #length = P.length
 v0_stakeholder = P.v0_stakeholder
 radius = P.particle_radius
 radius_h = P.herder_radius
-k_close = P.k_close
+R_close = P.R_close
 
 little_r = P.little_r 
 big_R = P.big_R    
@@ -20,8 +21,8 @@ scale = radius + radius_h
 #The paper it is based on moves the vehicle to the origin, so you must shift the coordinates so the target is the origin.
 #@njit
 def guidance_vector(position,target,obstacle,chase_index): #the position of the stakeholder and the point it is trying to reach and the location of the obstacle
-    x = position[0]/scale-target[0]/scale #shift coordinate frame so target is the origin, and scale by length
-    y = position[1]/scale-target[1]/scale
+    x = (position[0]-target[0])/scale #shift coordinate frame so target is the origin, and scale by length
+    y = (position[1]-target[1])/scale
     xc = np.zeros(len(obstacle[0]))
     yc = xc.copy()
     xbar = xc.copy()
@@ -30,8 +31,8 @@ def guidance_vector(position,target,obstacle,chase_index): #the position of the 
     P = xc.copy()
     
     for i in range(len(obstacle[0])): #this might break when you get back to a single passive particle. Oh well. 
-        xc[i] = obstacle[0,i]/scale - target[0]/scale
-        yc[i] = obstacle[1,i]/scale - target[1]/scale
+        xc[i] = (obstacle[0,i] - target[0])/scale
+        yc[i] = (obstacle[1,i] - target[1])/scale
         xbar[i] = x-xc[i]
         ybar[i] = y-yc[i]
         d[i] = np.sqrt(xbar[i]**2+ybar[i]**2)
@@ -43,10 +44,12 @@ def guidance_vector(position,target,obstacle,chase_index): #the position of the 
     Vg = V_path
     for i in range(len(obstacle[0])):
         cdist = np.sqrt(xc[i]**2 + yc[i]**2) 
-        if  cdist > (k_close*radius+radius_h)/scale or i == chase_index-1: 
+        if  cdist > (R_close + radius+radius_h)/scale or i == chase_index-1: 
             Vo_conv = -1/np.sqrt(xbar[i]**4+ybar[i]**4+2*xbar[i]**2*ybar[i]**2-2*little_r**2*xbar[i]**2-2*little_r**2*ybar[i]**2+little_r**2)*np.array([2*xbar[i]**3+2*xbar[i]*ybar[i]**2-2*little_r**2*xbar[i],2*ybar[i]**3+2*xbar[i]**2*ybar[i]-2*little_r**2*ybar[i]])
             Vo_circ = np.array([2*(y-yc[i]),2*(xc[i]-x)])
             V_obstacle = G_obstacle*Vo_conv+H_obstacle*Vo_circ
             Vg += P[i]*V_obstacle
     velocity = Vg
-    return velocity/np.linalg.norm(velocity)*v0_stakeholder    
+    dist = np.sqrt(x**2 + y**2)*scale
+    return velocity/np.linalg.norm(velocity)*min(v0_stakeholder,dist/delta_t)   
+

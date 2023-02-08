@@ -9,10 +9,14 @@ filename = 'PositionTarget' #File to save to.
 
 #simulation parameters
 #FIXME Now that I use a while loop, it would make more sense to create these arrays dynamically. 
-n_times = 3001      #number of simulation time steps
-t_end = 3000        #end time in seconds
-t = np.linspace(0.0,t_end,n_times) 
-delta_t = t[1] - t[0] #Timestep for the controller. 
+# =============================================================================
+# n_times = 3001      #number of simulation time steps
+# t_end = 1000        #end time in seconds
+# t = np.linspace(0.0,t_end,n_times) 
+# delta_t = t[1] - t[0] #Timestep for the controller. 
+# =============================================================================
+delta_t = 0.1
+t = np.array([0,delta_t])
 
 length = 0.0002   #Domain length of control region in meters. 
 n_electrodes = 0   #Number of electrodes #FIXME
@@ -74,13 +78,14 @@ W_1 = 20             #weight for residuals in objective function. This is actual
 W_2 = 1
 W_3 = 1000
 cutoff_percent = 0.2 #higher value will solve faster but be less accurate.
-k_close = 1.1
+#k_close = 1.1
+R_close = 0.1*particle_radius
 
 bounds = ((0,length)) #move this to parameters file
 
 #guidance vector parameters
 little_r = 0 
-k_far = 1.6#2.5 #just changed this from 3.0. Does it affect things? #2.0 was too small. 
+k_far = 1.5#2.5 #just changed this from 3.0. Does it affect things? #2.0 was too small. 
 big_R = k_far*(particle_radius + herder_radius)    
 G_path = 1
 H_path = 0
@@ -110,3 +115,8 @@ if dt > dtwant:               #make sure to set this so that dt is a nice number
     raise
 dtratio = int(delta_t/dt)
 
+#%%
+#print(np.sqrt(2*Dp*delta_t))
+print(R_close)
+vmax = umax*mu/(2*np.pi*D*(R_close+particle_radius+herder_radius))
+print(vmax*delta_t)
