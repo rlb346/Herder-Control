@@ -78,7 +78,6 @@ W_1 = 20             #weight for residuals in objective function. This is actual
 W_2 = 1
 W_3 = 1000
 cutoff_percent = 0.2 #higher value will solve faster but be less accurate.
-#k_close = 1.1
 R_close = 0.1*particle_radius
 
 bounds = ((0,length)) #move this to parameters file
@@ -92,7 +91,8 @@ H_path = 0
 G_obstacle = -2
 H_obstacle = 0.5    
 
-d_precision = 2*particle_radius
+d_precision1 = 1*particle_radius
+d_precision2 = 2*particle_radius
 
 
 #some more setup stuff

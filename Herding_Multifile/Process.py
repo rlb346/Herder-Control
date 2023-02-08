@@ -9,8 +9,6 @@ import Parameters as P
 nxy = P.nxy
 boundary_scale = P.boundary_scale
 length = P.length
-#t_end = P.t_end
-#diffusive_timescale = P.diffusive_timescale
 dt = P.dt
 D = P.D
 deltaxy = P.deltaxy
@@ -37,12 +35,6 @@ interval = (boundary_scale-1)/2
 x = np.linspace(-interval*length,(1+interval)*length,nxy)
 y = np.linspace(-interval*length,(1+interval)*length,nxy)
 X,Y = np.meshgrid(x,y) 
-
-#nTauRun = t_end/diffusive_timescale              # number of intrinsic timescale to run for
-#t_end = nTauRun*diffusive_timescale              # Change the end time so it is a multiple of the diffusive timescale.
-#will this cause problems with the controller times not lining up? Might have to change this.
-#nt   = int(np.ceil(t_end/dt)) +1 # number of timesteps
-#tlarge = np.linspace(0,t_end,nt)
 
 tsmall = np.linspace(0,delta_t,dtratio)
 particle_list = list(range(n_particles))
@@ -91,7 +83,6 @@ def process(uchem,stake_velocity,grid,time, initialpos):
             #hard sphere interactions.
             xcheck = xy[k+1,0,:] #notice this is not making a copy, it is just attaching a name to this section of the data.
             ycheck = xy[k+1,1,:]
-            #random.shuffle(particle_list) #hard to shuffle with different radius.
             #implement this as seperate numba function.
             for ii in particle_list:
                 if ii != m:

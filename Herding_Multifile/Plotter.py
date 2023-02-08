@@ -46,12 +46,6 @@ def plotter(k,xanswer,yanswer,uresult):
     plt.plot(uresult[0]*cm,uresult[1]*cm,'s',color = 'm', ms = 2)
     if target_type == 'position':
         for c in range(n_particles):
-# =============================================================================
-#             if c < n_stakeholders:
-#                 order = 3
-#             else:
-#                 order = 2
-# =============================================================================
             plt.plot(target_position[c,0]*cm,target_position[c,1]*cm,'x',color = colors[c]) 
             if c < n_stakeholders:
                 plt.plot(xanswer[k,c]*cm,yanswer[k,c]*cm, "o", color = colors[c], markersize = marksize_h,zorder = 4)
