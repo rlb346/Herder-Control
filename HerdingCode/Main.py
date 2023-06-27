@@ -6,6 +6,8 @@ import Save_data as S
 import Guidance_vector as G
 import time
 
+import pandas as pd
+
 
 ##Parameters
 n_particles = P.n_particles
@@ -30,32 +32,42 @@ grid = Pro.grid
 
 
 
-
-
-##run simulation and controller
+## Run simulation and controller
 xy = np.array([initial_position.T])
 switch_targets = True
 finished = False
-chase_index = 0
+chase_index = 1
 i = 0
 storeerrors = []
-while True: #Run the loop until it triggers the break statement.
-    #switching rule
+finished_counter = 0
+while True: # Run the loop until it triggers the break statement.
+    target_position = P.matchTargets(target_position)
+    # switching rule
     time0 = time.perf_counter()
     distance = np.sqrt((xy[i,0,:]-target_position[:,0])**2 + (xy[i,1,:]-target_position[:,1])**2)
-    if (distance[n_herders:] > d_tol).any(): #
-        if distance[chase_index] < d_prec:
-            switch_targets = True 
-        if switch_targets:
-            chase_index = np.argmax(distance[n_herders:])+n_herders
-            switch_targets = False   
+    if (distance[n_herders:] > d_tol).any(): #       
+        nothing = 0 #This is a useless line of code
     else:
-        chase_index = 0  
-        finished = True
-    if distance[0] < 1.5*(radius+radius_h) and finished: 
-        print("Completed")
+        if finished == False:
+            print("Completed")
+            finished = True   
+    if finished:
+        finished_counter += 1
+    if finished_counter == 3000: #run for 5 more minutes after finishing
+        print("5 minutes completed")
         break
-    if i >= 50000:
+        
+    if distance[chase_index] < d_prec:
+        switch_targets = True 
+    if switch_targets:
+        chase_index = np.argmax(distance[n_herders:])+n_herders
+        switch_targets = False   
+# =============================================================================
+#     if distance[0] < 1.5*(radius+radius_h) and finished: 
+#         print("Completed")
+#         break
+# =============================================================================
+    if i >= 40000:
         print("Too many iterations")
         break
     
@@ -64,9 +76,6 @@ while True: #Run the loop until it triggers the break statement.
     error = xy[i,:,chase_index]-target_position[chase_index,:]
     dist = np.linalg.norm(error)
     stake_target = xy[i,:,chase_index] - error/dist*(R_close + radius+radius_h)*np.sign(mu)
-    
-    if finished:
-        stake_target = target_position[0]
     
     time1 = time.perf_counter()
     stake_velocity = G.guidance_vector(xy[i,:,:n_herders].flatten(),stake_target, xy[i,:,n_herders:],chase_index)
@@ -93,4 +102,3 @@ while True: #Run the loop until it triggers the break statement.
 
 #%%
 print(np.amax(grid)/1000)
-
