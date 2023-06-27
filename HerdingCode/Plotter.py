@@ -19,12 +19,12 @@ Y = Pro.Y
 grid = Pro.grid
 umax = P.umax
 D = P.D
+m_image = P.m_image
 
 cm = 1E6 #this is to show the plot in micrometers (used to be centimeters)
 Clow = 0
-Chigh = 6*umax/(2*np.pi*D) #mmol/L
-Elow = 0
-Ehigh = 0.03
+#Chigh = 6*umax/(2*np.pi*D) #mmol/L
+Chigh = m_image*umax/(4*np.pi*D*radius_h) #can I get an equation for this?
 margin = length/10
 lower = 0-margin
 higher = length+margin
@@ -40,6 +40,11 @@ colors = ['tab:orange']
 for i in range(n_particles-n_herders):
     colors.append('tab:red')
 
+def findConcentration(x,y,herderposition): #give it a follower position and a herder position.
+    rx = herderposition[0] - x
+    ry = herderposition[1] - y
+    r = np.sqrt(rx**2 + ry**2)
+    return m_image*umax/(4*np.pi*D*r)
 
 def plotter(k,xanswer,yanswer,uresult):
     plt.figure(figsize=(3.25, 3.25), dpi= 200, facecolor='w', edgecolor='k')
@@ -57,9 +62,10 @@ def plotter(k,xanswer,yanswer,uresult):
         else:
             plt.plot(xanswer[k-ntail:k+1,c]*cm,yanswer[k-ntail:k+1,c]*cm,color = colors[c], linewidth = 1.0,zorder = 3)
     
+    herderposition = np.array([xanswer[k,:n_herders],yanswer[k,:n_herders]]) #works for a single herder.
     axes = plt.gca()
     divider = make_axes_locatable(axes)
-    plt.contourf(X*cm,Y*cm,grid.T,levels=np.linspace(Clow,Chigh,26), extend = "max") #recall that grid must be transposed to give the correct plot.
+    plt.contourf(X*cm,Y*cm,findConcentration(X,Y,herderposition),levels=np.linspace(Clow,Chigh,26), extend = "max") #recall that grid must be transposed to give the correct plot.
     cax = divider.append_axes("left", size = "5%", pad = 0.05)
     colorbar = plt.colorbar(cax = cax, shrink = 0.81, pad = 0.03,format='%.1f')
     colorbar.set_label("Concentration ($\dfrac{\mathrm{mmol}}{\mathrm{L}}$)", fontsize = 12)   
@@ -73,5 +79,11 @@ def plotter(k,xanswer,yanswer,uresult):
     display(plt.gcf())
     kfilled = str(k).zfill(5)
     plt.savefig(f"{folder}/{filename}Plot{kfilled}.png",bbox_inches="tight") 
-    plt.close()
+    plt.close()   
     return
+
+#%%
+    print(Chigh)
+    herderposition = np.array([0,0])
+    print(findConcentration(X,Y,herderposition))
+    print(m_image*umax/(4*np.pi*D*radius_h))
