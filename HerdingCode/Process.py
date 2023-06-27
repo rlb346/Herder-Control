@@ -2,9 +2,8 @@ import numpy as np
 from numba import njit
 from scipy.interpolate import RectBivariateSpline
 
+# Establish parameters 
 import Parameters as P
-
-
 nxy = P.nxy
 boundary_scale = P.boundary_scale
 length = P.length
@@ -21,9 +20,11 @@ radius = P.particle_radius
 radius_h = P.herder_radius
 dtratio = P.dtratio
 delta_t = P.delta_t
+m_image = P.m_image
 
+#np.random.seed(1)
 
-#some preliminary stuff
+# Preliminary setup
 grid = np.zeros((nxy,nxy))     # solution array
 #Because of the way we index variables on the meshgrid, we have to transpose grid when we want to plot it.
 #This is because X[0] doesn't give the first x value, but X[:,0] does. Instead of reversing the indices on everything, it is easier to just transpose the final resuult.
@@ -40,7 +41,7 @@ particle_list = list(range(n_particles))
 
 
 #When debugging, comment out the njit.
-@njit #this function does one iteration of the Gauss-Seidel algorithm 
+#@njit #this function does one iteration of the Gauss-Seidel algorithm 
 def finite_difference(grid,Sources):
     for iindex in range(1,nxy-1):
         for jindex in range(1,nxy-1):
@@ -48,21 +49,21 @@ def finite_difference(grid,Sources):
                 D*dt/deltaxy**2*(grid[iindex-1,jindex] - 2*grid[iindex,jindex] + grid[iindex+1,jindex]) + 
                 D*dt/deltaxy**2*(grid[iindex,jindex-1] - 2*grid[iindex,jindex] + grid[iindex,jindex+1]) + 
                 dt*Sources[iindex,jindex]/deltaxy**2 )#Divide the last term by deltaxy^2 to get concentration.
-              #Zero boundary conditions (not written, because they're zero.)
-    return
-
-@njit
-def set_sources(Sources,xindex,yindex,xy,k,uchem):
-    for n in range(n_herders): 
-            #Set previous herder source term back to zero.
-            Sources[xindex[n],yindex[n]] = 0  
-            #Find the new location for the herder source term.
-            xindex[n] = np.argmin((X[0,:]-xy[k,0,n])**2)
-            yindex[n] = np.argmin((Y[:,0]-xy[k,1,n])**2)
-            Sources[xindex[n],yindex[n]] = uchem 
+                #Zero boundary conditions (not written, because they're zero.)
     return
 
 #@njit
+def set_sources(Sources,xindex,yindex,xy,k,uchem):
+    for n in range(n_herders): 
+        #Set previous herder source term back to zero.
+        Sources[xindex[n],yindex[n]] = 0  
+        #Find the new location for the herder source term.
+        xindex[n] = np.argmin((X[0,:]-xy[k,0,n])**2)
+        yindex[n] = np.argmin((Y[:,0]-xy[k,1,n])**2)
+        Sources[xindex[n],yindex[n]] = uchem 
+    return
+
+@njit
 def hard_sphere_interactions(particle_list,m,xcheck,ycheck):
     for ii in particle_list:
         if ii != m:
@@ -76,6 +77,11 @@ def hard_sphere_interactions(particle_list,m,xcheck,ycheck):
                 ycheck[m] = ycheck[m] - 1*(dij-overlap_distance)*(ycheck[m]-ycheck[ii])/dij
     return
 
+@njit
+def findgradient(xy,herderposition,uchem): #give it a follower position and a herder position.
+    r = np.linalg.norm(herderposition-xy)
+    return m_image*uchem/(4*np.pi*D)*(herderposition-xy)/r**3
+
 xindex = np.zeros(n_herders, dtype = int)
 yindex = np.zeros(n_herders, dtype = int)
 
@@ -85,17 +91,19 @@ def process(uchem,stake_velocity,grid,time, initialpos):
     xy[0] = initialpos
     vxy = np.zeros((len(time),2,n_particles))
     for k in range(len(time)-1): 
-        set_sources(Sources,xindex,yindex,xy,k,uchem)
-        finite_difference(grid,Sources)
-        interp = RectBivariateSpline(x,y,grid) #default for RectBivariateSpline is cubic interpolation
+        #set_sources(Sources,xindex,yindex,xy,k,uchem)
+        #finite_difference(grid,Sources)
+        #interp = RectBivariateSpline(x,y,grid) #default for RectBivariateSpline is cubic interpolation
         for m in range(n_particles): #does this cause errors by moving them in order?
             if m < n_herders: 
                 v_desired = stake_velocity
                 vxy[k,0,m] = v_desired[0] + brownian_motion*np.random.normal(0,1)*np.sqrt(2*Dp)/np.sqrt(dt)
                 vxy[k,1,m] = v_desired[1] + brownian_motion*np.random.normal(0,1)*np.sqrt(2*Dp)/np.sqrt(dt)     
             else:
-                vxy[k,0,m] = mu*(interp(xy[k-1,0,m]+deltaxy,xy[k-1,1,m]) - interp(xy[k-1,0,m]-deltaxy,xy[k-1,1,m]))/(2*deltaxy) + brownian_motion*np.random.normal(0,1)*np.sqrt(2*Dp_h)/np.sqrt(dt)
-                vxy[k,1,m] = mu*(interp(xy[k-1,0,m],xy[k-1,1,m]+deltaxy) - interp(xy[k-1,0,m],xy[k-1,1,m]-deltaxy))/(2*deltaxy) + brownian_motion*np.random.normal(0,1)*np.sqrt(2*Dp_h)/np.sqrt(dt)
+                mygradient = findgradient(xy[k,:,m],xy[k,:,0],uchem) #this just does first herder
+                #fixme: loop over all herders
+                vxy[k,0,m] = mu*mygradient[0] + brownian_motion*np.random.normal(0,1)*np.sqrt(2*Dp_h)/np.sqrt(dt)
+                vxy[k,1,m] = mu*mygradient[1] + brownian_motion*np.random.normal(0,1)*np.sqrt(2*Dp_h)/np.sqrt(dt)
             xy[k+1,:,m] = xy[k,:,m] + vxy[k,:,m]*dt
             
             #hard sphere interactions.
