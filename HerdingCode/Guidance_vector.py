@@ -19,7 +19,7 @@ H_obstacle = P.H_obstacle
 scale = radius + radius_h
 #This function gives a guidance vector field to move the stakeholder to the target while avoiding the obstacles.
 #The paper it is based on moves the vehicle to the origin, so you must shift the coordinates so the target is the origin.
-@njit
+#@njit
 def guidance_vector(position,target,obstacle,chase_index): #the position of the stakeholder and the point it is trying to reach and the location of the obstacle
     x = (position[0]-target[0])/scale #shift coordinate frame so target is the origin, and scale by length
     y = (position[1]-target[1])/scale
@@ -51,5 +51,4 @@ def guidance_vector(position,target,obstacle,chase_index): #the position of the 
             Vg += P[i]*V_obstacle
     velocity = Vg
     dist = np.sqrt(x**2 + y**2)*scale
-    return velocity/np.linalg.norm(velocity)*min(v0_stakeholder,dist/delta_t)   
-
+    return velocity/np.linalg.norm(velocity)*min(v0_stakeholder,dist/delta_t) 
