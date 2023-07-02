@@ -53,40 +53,40 @@ def finite_difference(grid,Sources):
     return
 
 #@njit
-def set_sources(Sources,xindex,yindex,xy,k,uchem):
+def set_sources(Sources, xindex, yindex, xy, k, uchem):
     for n in range(n_herders): 
         #Set previous herder source term back to zero.
         Sources[xindex[n],yindex[n]] = 0  
         #Find the new location for the herder source term.
-        xindex[n] = np.argmin((X[0,:]-xy[k,0,n])**2)
-        yindex[n] = np.argmin((Y[:,0]-xy[k,1,n])**2)
+        xindex[n] = np.argmin((X[0,:] - xy[k,0,n])**2)
+        yindex[n] = np.argmin((Y[:,0] - xy[k,1,n])**2)
         Sources[xindex[n],yindex[n]] = uchem 
     return
 
 @njit
-def hard_sphere_interactions(particle_list,m,xcheck,ycheck):
+def hard_sphere_interactions(particle_list, m, xcheck, ycheck):
     for ii in particle_list:
         if ii != m:
-            dij = np.sqrt((xcheck[ii]-xcheck[m])**2+(ycheck[ii]-ycheck[m])**2) 
+            dij = np.sqrt((xcheck[ii] - xcheck[m])**2 + (ycheck[ii] - ycheck[m])**2) 
             if ii < n_herders:
-                overlap_distance = radius+radius_h
+                overlap_distance = radius + radius_h
             else:
-                overlap_distance = 2*radius
+                overlap_distance = 2 * radius
             if dij < overlap_distance:
                 xcheck[m] = xcheck[m] - 1*(dij-overlap_distance)*(xcheck[m]-xcheck[ii])/dij
                 ycheck[m] = ycheck[m] - 1*(dij-overlap_distance)*(ycheck[m]-ycheck[ii])/dij
     return
 
 @njit
-def findgradient(xy,herderposition,uchem): #give it a follower position and a herder position.
-    r = np.linalg.norm(herderposition-xy)
-    return m_image*uchem/(4*np.pi*D)*(herderposition-xy)/r**3
+def findgradient(xy, herderposition, uchem): #give it a follower position and a herder position.
+    r = np.linalg.norm(herderposition - xy)
+    return m_image * uchem / (4 * np.pi * D) * (herderposition - xy) / r**3
 
 xindex = np.zeros(n_herders, dtype = int)
 yindex = np.zeros(n_herders, dtype = int)
 
 #this function runs the physics and gives the resulting positions
-def process(uchem,stake_velocity,grid,time, initialpos): 
+def process(uchem, herder_velocity, grid, time, initialpos): 
     xy = np.zeros((len(time),2,n_particles))
     xy[0] = initialpos
     vxy = np.zeros((len(time),2,n_particles))
@@ -96,14 +96,14 @@ def process(uchem,stake_velocity,grid,time, initialpos):
         #interp = RectBivariateSpline(x,y,grid) #default for RectBivariateSpline is cubic interpolation
         for m in range(n_particles): #does this cause errors by moving them in order?
             if m < n_herders: 
-                v_desired = stake_velocity
-                vxy[k,0,m] = v_desired[0] + brownian_motion*np.random.normal(0,1)*np.sqrt(2*Dp)/np.sqrt(dt)
-                vxy[k,1,m] = v_desired[1] + brownian_motion*np.random.normal(0,1)*np.sqrt(2*Dp)/np.sqrt(dt)     
+                v_desired = herder_velocity
+                vxy[k,0,m] = v_desired[0] + brownian_motion * np.random.normal(0,1) * np.sqrt(2*Dp) / np.sqrt(dt)
+                vxy[k,1,m] = v_desired[1] + brownian_motion * np.random.normal(0,1) * np.sqrt(2*Dp) / np.sqrt(dt)     
             else:
                 mygradient = findgradient(xy[k,:,m],xy[k,:,0],uchem) #this just does first herder
                 #fixme: loop over all herders
-                vxy[k,0,m] = mu*mygradient[0] + brownian_motion*np.random.normal(0,1)*np.sqrt(2*Dp_h)/np.sqrt(dt)
-                vxy[k,1,m] = mu*mygradient[1] + brownian_motion*np.random.normal(0,1)*np.sqrt(2*Dp_h)/np.sqrt(dt)
+                vxy[k,0,m] = mu * mygradient[0] + brownian_motion * np.random.normal(0,1) * np.sqrt(2*Dp_h) / np.sqrt(dt)
+                vxy[k,1,m] = mu * mygradient[1] + brownian_motion * np.random.normal(0,1) * np.sqrt(2*Dp_h) / np.sqrt(dt)
             xy[k+1,:,m] = xy[k,:,m] + vxy[k,:,m]*dt
             
             #hard sphere interactions.

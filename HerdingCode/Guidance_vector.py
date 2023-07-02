@@ -4,7 +4,7 @@ from numba import njit
 import Parameters as P
 
 delta_t = P.delta_t
-v0_stakeholder = P.v0_stakeholder
+v0_herder = P.v0_herder
 radius = P.particle_radius
 radius_h = P.herder_radius
 R_close = P.R_close
@@ -51,4 +51,4 @@ def guidance_vector(position,target,obstacle,chase_index): #the position of the 
             Vg += P[i]*V_obstacle
     velocity = Vg
     dist = np.sqrt(x**2 + y**2)*scale
-    return velocity/np.linalg.norm(velocity)*min(v0_stakeholder,dist/delta_t) 
+    return velocity/np.linalg.norm(velocity)*min(v0_herder,dist/delta_t) 

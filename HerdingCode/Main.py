@@ -44,7 +44,7 @@ while True: # Run the loop until it triggers the break statement.
     target_position = P.matchTargets(target_position)
     # switching rule
     time0 = time.perf_counter()
-    distance = np.sqrt((xy[i,0,:]-target_position[:,0])**2 + (xy[i,1,:]-target_position[:,1])**2)
+    distance = np.sqrt((xy[i,0,:] - target_position[:,0])**2 + (xy[i,1,:] - target_position[:,1])**2)
     if (distance[n_herders:] > d_tol).any(): #       
         nothing = 0 #This is a useless line of code
     else:
@@ -73,25 +73,25 @@ while True: # Run the loop until it triggers the break statement.
     
     
     #heuristic for choosing herder position.
-    error = xy[i,:,chase_index]-target_position[chase_index,:]
+    error = xy[i,:,chase_index] - target_position[chase_index,:]
     dist = np.linalg.norm(error)
-    stake_target = xy[i,:,chase_index] - error/dist*(R_close + radius+radius_h)*np.sign(mu)
+    herder_target = xy[i,:,chase_index] - error/dist*(R_close + radius + radius_h)*np.sign(mu)
     
     time1 = time.perf_counter()
-    stake_velocity = G.guidance_vector(xy[i,:,:n_herders].flatten(),stake_target, xy[i,:,n_herders:],chase_index)
+    herder_velocity = G.guidance_vector(xy[i,:,:n_herders].flatten(), herder_target, xy[i,:,n_herders:], chase_index)
     
     time2 = time.perf_counter()
-    xnew = [Pro.process(umax,stake_velocity,grid,t[i] + tsmall ,xy[i])]
+    xnew = [Pro.process(umax, herder_velocity, grid, t[i] + tsmall, xy[i])]
     time3 = time.perf_counter()
-    xy = np.concatenate((xy,xnew))
-    t = np.append(t,t[-1]+delta_t)
+    xy = np.concatenate((xy, xnew))
+    t = np.append(t,t[-1] + delta_t)
     
     
     if i%20 == 0:
-        Plotter.plotter(i,xy[:,0],xy[:,1],stake_target)
-        errorsall = xy[i,:,n_herders:]-target_position[n_herders:,:].T
+        Plotter.plotter(i, xy[:,0], xy[:,1], herder_target)
+        errorsall = xy[i,:,n_herders:] - target_position[n_herders:,:].T
         sumerrors = np.linalg.norm(errorsall/radius)
-        print(i,np.linalg.norm(xy[i,:,0]-stake_target)/radius,sumerrors)
+        print(i,np.linalg.norm(xy[i,:,0] - herder_target)/radius,sumerrors)
         #print(time1-time0,time2-time1,time3-time2)
         storeerrors.append(sumerrors)
         if save:
